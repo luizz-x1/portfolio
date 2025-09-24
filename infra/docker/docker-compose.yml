@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+
+  # Backend
+  backend:
+    build:
+      context: ../../apps/backend
+      dockerfile: ../../infra/docker/backend.Dockerfile
+    container_name: portfolio_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../apps/backend/.env
+    depends_on:
+      - db
+    volumes:
+      - ../../apps/backend:/app
+
+  # Frontend
+  frontend: 
+    build:
+      context: ../../apps/frontend
+      dockerfile: ../../infra/docker/web.Dockerfile
+    container_name: portfolio_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../apps/frontend:/app
+
+  # PostgreSQL
+  db:
+    image: postgres:15
+    container_name: portfolio_db
+    environment:
+      POSTGRES_USER: portfolio_user
+      POSTGRES_PASSWORD: portfolio_pass
+      POSTGRES_DB: portfolio_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  # # Nginx
+  # nginx:
+  #   image: nginx:1.26
+  #   container_name: portfolio_nginx
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./infra/nginx:/etc/nginx/conf.d
+  #   depends_on:
+  #     - frontend
+  #     - backend
+
+volumes:
+  db_data:
