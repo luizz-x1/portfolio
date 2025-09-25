@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Entornos virtuales
+.env
+.venv
+env/
+venv/
+
+# Alembic cache
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# Node
+node_modules/
+build/
+dist/
+
+# Docker
+*.log
