@@ -14,6 +14,7 @@ class User(Base):
     unique_id = Column(String(255), unique=True, nullable=False)
     email = Column(String(255), nullable=True)
     name = Column(String(255), nullable=True)
+    role = Column(String(50), default="visitor") 
     create_at = Column(DateTime, nullable=False)
     last_connection = Column(DateTime, nullable=True)
 
@@ -88,7 +89,7 @@ class Meeting(Base):
     description = Column(Text, nullable=True)
     meeting_link = Column(String(500), nullable=True)
     scheduled_at = Column(DateTime, nullable=False)
-    status = Column(String(50), nullable=False)  # ej: "pending", "accepted", "cancelled"
+    status = Column(String(50), nullable=False)  # pending, accepted, cancelled
     created_at = Column(DateTime, nullable=False)
 
     # Relaciones
@@ -106,7 +107,7 @@ class MeetingParticipant(Base):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     meeting_id = Column(BigInteger, ForeignKey("meetings.id"), nullable=False)
     user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
-    response = Column(String(50), nullable=True)  # ej: "accepted", "rejected", "pending"
+    response = Column(String(50), nullable=True)  # accepted, rejected, pending
     responded_at = Column(DateTime, nullable=True)
 
     # Relaciones

@@ -1,7 +1,31 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+from config.database import engine
+from models.models import Base
+from api.endpoints import users, auth, chat  
+
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="Portfolio Chat API", version="1.0.0")
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(auth.router, prefix="/api", tags=["auth"])
+app.include_router(chat.router, prefix="/api", tags=["chat"])
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello World Luis"}
+    return {"message": "Portfolio Chat API is running!"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
