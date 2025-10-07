@@ -55,12 +55,10 @@ class TokenData(BaseModel):
     role: str
 
 class UserWithToken(BaseModel):
-    id: int
+    
     unique_id: str
     name: Optional[str] = None
-    role: str
     create_at: datetime
-    last_connection: Optional[datetime]
     access_token: str
     token_type: str = "bearer"
 

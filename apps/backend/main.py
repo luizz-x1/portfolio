@@ -22,10 +22,6 @@ app.include_router(users.router, prefix="/api", tags=["users"])
 app.include_router(auth.router, prefix="/api", tags=["auth"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
 
-@app.get("/")
-def read_root():
-    return {"message": "Portfolio Chat API is running!"}
-
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}

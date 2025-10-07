@@ -1,5 +1,6 @@
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from fastapi import HTTPException, status, Depends, Header
 
 SECRET_KEY = ""
 ALGORITHM = "HS256"
@@ -29,3 +30,37 @@ def verify_token(token: str):
         return payload
     except JWTError:
         return None
+
+def get_user_id_from_token(token: str) -> int:
+    """Extraer user_id del token"""
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido o expirado"
+        )
+    return payload.get("user_id")
+
+def verify_token(token: str):
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        return None
+
+def get_current_user(authorization: str = Header(..., alias="Authorization")):
+    """Valida el token desde el header Authorization: Bearer <token>"""
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    token = authorization.split(" ")[1]
+    payload = verify_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+    return payload
+
+def require_admin(current_user: dict = Depends(get_current_user)):
+    """Permite solo usuarios con rol admin"""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permisos para esta ruta")
+    return current_user
+    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo1NCwicm9sZSI6InZpc2l0b3IiLCJleHAiOjE3NTk5NTIwOTd9.O-Oru2qzu57-moTiGvkdWj5gfIjI3LgP9ZNkLBHYchA
