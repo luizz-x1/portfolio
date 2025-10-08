@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 
 from config.database import get_db
@@ -16,7 +16,7 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     
     access_token = create_access_token(
-        data={"user_id": user.id, "role": user.role}
+        data={"user_id": user.id, "role": user.role}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
