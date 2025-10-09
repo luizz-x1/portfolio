@@ -63,4 +63,8 @@ def require_admin(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="No tienes permisos para esta ruta")
     return current_user
-    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo1NCwicm9sZSI6InZpc2l0b3IiLCJleHAiOjE3NTk5NTIwOTd9.O-Oru2qzu57-moTiGvkdWj5gfIjI3LgP9ZNkLBHYchA
+
+def decodeJWT(token):
+    """Decodifica el tocken"""
+    decode = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False})
+    return decode

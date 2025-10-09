@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
-
+from jose import jwt, ExpiredSignatureError, JWTError
 from config.database import get_db
 from schemas.users import UserLogin, Token
 from models.models import User
-from utils.security import create_access_token
+from utils.security import create_access_token, verify_token, decodeJWT
 
 router = APIRouter()
 
@@ -35,18 +35,24 @@ def verify_access_token(authorization: str = Header(..., alias="Authorization"))
 
 @router.post("/refresh-token", response_model=Token)
 def refresh_access_token(authorization: str = Header(..., alias="Authorization")):
-    """Generar un nuevo token a partir de uno válido"""
+    """Generar un nuevo token a partir de uno expirado"""
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=400, detail="Formato de token inválido")
 
     token = authorization.split(" ")[1]
     payload = verify_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+
+    if payload:
+        raise HTTPException(status_code=400, detail="El token aún es válido, no necesita refrescarse")
+
+    try:
+        expired_payload = decodeJWT(token)
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Token inválido")
 
     new_token = create_access_token({
-        "user_id": payload["user_id"],
-        "role": payload["role"]
+        "user_id": expired_payload["user_id"],
+        "role": expired_payload["role"]
     })
 
     return {"access_token": new_token, "token_type": "bearer"}
