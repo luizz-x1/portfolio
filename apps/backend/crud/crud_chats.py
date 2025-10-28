@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
-from models.models import Chat, ChatParticipant
+from sqlalchemy import func
 from datetime import datetime
+from models.models import Chat, ChatParticipant
+
 
 def create_chat(db: Session, is_group: bool = False):
     db_chat = Chat(
@@ -52,7 +54,7 @@ def get_chat_participants(db: Session, chat_id: int):
 
 def get_user_contacts(db: Session, user_id: int):
     """
-    Retorna los IDs de los usuarios con los que el usuario tiene chats directos.
+    Retorna los IDs de los usuarios con los que el usuario tiene chats directos (1 a 1).
     """
     subquery = (
         db.query(ChatParticipant.chat_id)
@@ -70,3 +72,38 @@ def get_user_contacts(db: Session, user_id: int):
     )
 
     return [c[0] for c in contacts]
+
+
+def get_private_chat_between_users(db: Session, user1_id: int, user2_id: int):
+    """
+    Retorna el chat existente entre dos usuarios (si existe).
+    """
+    return (
+        db.query(Chat)
+        .join(ChatParticipant)
+        .filter(Chat.is_group == False)
+        .filter(ChatParticipant.user_id.in_([user1_id, user2_id]))
+        .group_by(Chat.id)
+        .having(func.count(ChatParticipant.user_id) == 2)
+        .first()
+    )
+
+def create_private_chat(db: Session, user1_id: int, user2_id: int):
+    """
+    Crea un nuevo chat privado entre dos usuarios.
+    """
+    new_chat = Chat(
+        is_group=False,
+        created_at=datetime.now()
+    )
+    db.add(new_chat)
+    db.commit()
+    db.refresh(new_chat)
+
+    db.add_all([
+        ChatParticipant(chat_id=new_chat.id, user_id=user1_id, joined_at=datetime.now()),
+        ChatParticipant(chat_id=new_chat.id, user_id=user2_id, joined_at=datetime.now())
+    ])
+    db.commit()
+
+    return new_chat
