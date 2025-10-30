@@ -18,10 +18,6 @@ def create_or_get_private_chat(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """
-    Crea un chat 1 a 1 entre el usuario autenticado y el receptor indicado.
-    Si ya existe, lo devuelve sin duplicarlo.
-    """
     
     sender_id = current_user['user_id']
 
@@ -52,9 +48,6 @@ async def create_message(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """
-    Crear nuevo mensaje en un chat existente y notificar en tiempo real.
-    """
     new_message = crud_messages.create_message(db, message=message)
 
     sender_id = current_user["user_id"]

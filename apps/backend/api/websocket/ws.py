@@ -10,7 +10,7 @@ router = APIRouter()
 
 # --- Seguridad ---
 async def authenticate_websocket(websocket: WebSocket, user_id: int) -> dict:
-    """Valida el token JWT y que coincida con el user_id."""
+    
     token = websocket.query_params.get("token")
     if not token:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
@@ -36,7 +36,7 @@ async def authenticate_websocket(websocket: WebSocket, user_id: int) -> dict:
 
 # --- Notificaciones ---
 async def notify_contacts_status(user_id: int, contacts: list[int], status_value: str):
-    """Notifica a los contactos el estado del usuario."""
+    
     for cid in contacts:
         await publish(f"user:{cid}", json.dumps({
             "type": "status",
@@ -46,7 +46,7 @@ async def notify_contacts_status(user_id: int, contacts: list[int], status_value
 
 
 async def send_online_contacts(websocket: WebSocket, contacts: list[int]):
-    """Envía al cliente los contactos que están online."""
+    
     for cid in contacts:
         if cid in connected_users:
             await websocket.send_text(json.dumps({
@@ -58,7 +58,7 @@ async def send_online_contacts(websocket: WebSocket, contacts: list[int]):
 
 # --- Escucha de Redis ---
 async def start_redis_listener(pubsub_user, websocket: WebSocket):
-    """Escucha eventos personales desde Redis."""
+    
     while True:
         message_user = await pubsub_user.get_message(ignore_subscribe_messages=True, timeout=0.1)
         if message_user:
@@ -76,14 +76,16 @@ async def start_redis_listener(pubsub_user, websocket: WebSocket):
 # --- WebSocket ---
 @router.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
-    """Canal WebSocket seguro y en tiempo real."""
+    
+    session_id = websocket.query_params.get("session_id", "default")
+
     # Seguridad
     payload = await authenticate_websocket(websocket, user_id)
     if not payload:
         return
 
     # Conexión
-    await connect_user(user_id, websocket)
+    await connect_user(user_id, websocket, session_id)
     await set_user_status(user_id, "online")
 
     # Notificación de estado
@@ -127,9 +129,10 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
 
     except WebSocketDisconnect:
         # Desconexión
-        disconnect_user(user_id)
-        await set_user_status(user_id, "offline")
-        await notify_contacts_status(user_id, contacts, "offline")
+        no_more_sessions = disconnect_user(user_id, session_id)
+        if no_more_sessions:
+            await set_user_status(user_id, "offline")
+            await notify_contacts_status(user_id, contacts, "offline")
 
     finally:
         # Limpieza
