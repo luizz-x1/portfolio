@@ -4,6 +4,7 @@ from datetime import datetime
 from models.models import Chat, ChatParticipant
 
 
+# Crear un nuevo chat (puede ser grupal o privado)
 def create_chat(db: Session, is_group: bool = False):
     db_chat = Chat(
         is_group=is_group,
@@ -15,6 +16,7 @@ def create_chat(db: Session, is_group: bool = False):
     return db_chat
 
 
+# Agregar participante a un chat
 def add_participant_to_chat(db: Session, chat_id: int, user_id: int):
     db_participant = ChatParticipant(
         chat_id=chat_id,
@@ -27,8 +29,8 @@ def add_participant_to_chat(db: Session, chat_id: int, user_id: int):
     return db_participant
 
 
+# Obtener todos los chats de un usuario
 def get_user_chats(db: Session, user_id: int):
-    """Retorna los chats en los que participa el usuario."""
     return (
         db.query(Chat)
         .join(ChatParticipant)
@@ -37,13 +39,13 @@ def get_user_chats(db: Session, user_id: int):
     )
 
 
+# Obtener un chat por ID
 def get_chat_by_id(db: Session, chat_id: int):
-    """Retorna un chat por su ID."""
     return db.query(Chat).filter(Chat.id == chat_id).first()
 
 
+# Obtener IDs de los participantes de un chat
 def get_chat_participants(db: Session, chat_id: int):
-    """Retorna los IDs de todos los participantes de un chat específico."""
     participants = (
         db.query(ChatParticipant.user_id)
         .filter(ChatParticipant.chat_id == chat_id)
@@ -52,10 +54,8 @@ def get_chat_participants(db: Session, chat_id: int):
     return [p[0] for p in participants]
 
 
+# Obtener contactos (1 a 1) de un usuario
 def get_user_contacts(db: Session, user_id: int):
-    """
-    Retorna los IDs de los usuarios con los que el usuario tiene chats directos (1 a 1).
-    """
     subquery = (
         db.query(ChatParticipant.chat_id)
         .join(Chat)
@@ -74,10 +74,8 @@ def get_user_contacts(db: Session, user_id: int):
     return [c[0] for c in contacts]
 
 
+# Buscar chat privado existente entre dos usuarios
 def get_private_chat_between_users(db: Session, user1_id: int, user2_id: int):
-    """
-    Retorna el chat existente entre dos usuarios (si existe).
-    """
     return (
         db.query(Chat)
         .join(ChatParticipant)
@@ -88,10 +86,9 @@ def get_private_chat_between_users(db: Session, user1_id: int, user2_id: int):
         .first()
     )
 
+
+# Crear un nuevo chat privado entre dos usuarios
 def create_private_chat(db: Session, user1_id: int, user2_id: int):
-    """
-    Crea un nuevo chat privado entre dos usuarios.
-    """
     new_chat = Chat(
         is_group=False,
         created_at=datetime.now()

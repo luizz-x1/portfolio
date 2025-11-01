@@ -13,3 +13,4 @@ async def status(user_id: str):
 async def test_redis():
     pong = await ping()
     return {"redis": pong}
+  

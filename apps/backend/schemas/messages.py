@@ -14,7 +14,7 @@ class MessageResponse(MessageBase):
     chat_id: int
     sender_id: int
     created_at: datetime
-    is_read: bool
+    status: str
     read_at: Optional[datetime]
 
     class Config:

@@ -6,7 +6,7 @@ SECRET_KEY = ""
 ALGORITHM = "HS256"
 
 
-# Crear token de acceso general
+# Crear token de acceso
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(hours=24))
@@ -15,26 +15,26 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return encoded_jwt
 
 
-# Crear token con rol visitante
 def create_visitor_token(user_id: int):
+    """Token con rol visitante"""
     return create_access_token({"user_id": user_id, "role": "visitor"})
 
 
-# Crear token con rol administrador
 def create_admin_token(user_id: int):
+    """Token con rol admin"""
     return create_access_token({"user_id": user_id, "role": "admin"})
 
 
-# Verificar si un token es válido y no ha expirado
 def verify_token(token: str):
+    """Verifica firma y expiración"""
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
         return None
 
 
-# Obtener el user_id contenido en el token
 def get_user_id_from_token(token: str) -> int:
+    """Extrae el ID del usuario del token"""
     payload = verify_token(token)
     if not payload:
         raise HTTPException(
@@ -44,8 +44,8 @@ def get_user_id_from_token(token: str) -> int:
     return payload.get("user_id")
 
 
-# Extraer y validar token desde los headers HTTP
 def get_current_user(authorization: str = Header(..., alias="Authorization")):
+    """Obtiene y valida el usuario desde el header"""
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token inválido")
 
@@ -56,13 +56,13 @@ def get_current_user(authorization: str = Header(..., alias="Authorization")):
     return payload
 
 
-# Solo permite acceso a usuarios con rol administrador
 def require_admin(current_user: dict = Depends(get_current_user)):
+    """Permite acceso solo a admin"""
     if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="No tienes permisos para esta ruta")
     return current_user
 
 
-# Decodifica un token sin validar la expiración
 def decodeJWT(token: str):
+    """Decodifica sin verificar expiración"""
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False})

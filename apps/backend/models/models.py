@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, BigInteger, String, Text, Boolean, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, declarative_base
+
 
 Base = declarative_base()
 
@@ -68,7 +68,7 @@ class Message(Base):
     sender_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, nullable=False)
-    is_read = Column(Boolean, default=False, nullable=False)
+    status = Column(String(250), nullable=True)
     read_at = Column(DateTime, nullable=True)
 
     # Relaciones

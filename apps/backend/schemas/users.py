@@ -55,7 +55,7 @@ class TokenData(BaseModel):
     role: str
 
 class UserWithToken(BaseModel):
-    
+    id: int
     unique_id: str
     name: Optional[str] = None
     create_at: datetime
