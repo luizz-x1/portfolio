@@ -2,11 +2,55 @@ from typing import Dict
 from fastapi import WebSocket, status
 from utils.redis import publish
 from utils.security import verify_token
+from crud import crud_meetings
 import asyncio, json
 
 # Usuarios conectados con sus sesiones activas
 connected_users: Dict[int, Dict[str, WebSocket]] = {}
 
+
+async def handle_meeting_event(user_id: int, data: str, db):
+
+    try:
+        parts = data.split(":")
+        if len(parts) != 4:
+            print(f"⚠️ Formato inválido para meeting: {data}")
+            return
+
+        _, target_user_id, chat_id, status = parts
+        target_user_id = int(target_user_id)
+        chat_id = int(chat_id)
+
+        if status not in ("pending", "accepted", "canceled"):
+            print(f"⚠️ Estado inválido de reunión: {status}")
+            return
+
+        # Guardar en DB si la reunión fue aceptada
+        if status == "accepted":
+            crud_meetings.create_meeting(
+                db=db,
+                chat_id=chat_id,
+                organizer_id=user_id,
+                title=f"Reunión del chat {chat_id}",
+                description="Reunión confirmada entre participantes.",
+                meeting_link=None,
+                scheduled_at=datetime.now(),
+                status="accepted"
+            )
+
+        await publish(f"user:{target_user_id}", json.dumps({
+            "type": "meeting",
+            "from": user_id,
+            "chat_id": chat_id,
+            "status": status
+        }))
+
+        print(f"📅 Reunión '{status}' entre {user_id} y {target_user_id} (chat {chat_id})")
+
+    except Exception as e:
+        print(f"❌ Error al manejar evento de reunión: {e}")
+
+        
 
 async def connect_user(user_id: int, websocket: WebSocket, session_id: str):
     """Acepta el WebSocket y registra la sesión activa del usuario."""

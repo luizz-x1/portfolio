@@ -12,7 +12,7 @@ from services.ws_service import (
     connect_user, disconnect_user, connected_users,
     send_message_to_user, authenticate_websocket,
     notify_contacts_status, send_online_contacts,
-    start_redis_listener
+    start_redis_listener,handle_meeting_event
 )
 from services.status_service import set_user_status
 from services.chat_service import get_contacts_for_notifications
@@ -87,6 +87,9 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
                     "message_id": message_id,
                     "status": "read"
                 }))
+            
+            elif data.startswith("meeting: "):
+                await handle_meeting_event(user_id, data, db)
 
     except WebSocketDisconnect:
         # Desconexión del usuario
